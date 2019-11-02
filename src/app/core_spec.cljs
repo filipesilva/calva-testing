@@ -1,8 +1,7 @@
 (ns app.core-spec
-  (:require
-    [app.core :refer [app]]
-    [clojure.string :refer [includes?]]
-    [cljs.test :refer-macros [deftest is]]))
+  (:require [cljs.test :refer-macros [deftest is]]))
 
-(deftest app-has-running
-  (is (some #(when (string? %) (includes? % "is running")) (app))))
+(deftest my-test
+  (is (= 1 2) "This test should fail"))
+
+(defn main [])

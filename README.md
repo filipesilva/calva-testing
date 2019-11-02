@@ -1,52 +1,104 @@
-This project was bootstrapped with [Create CLJS App](https://github.com/filipesilva/create-cljs-app).
+# Testing with Shadow CLJS and Calva
 
-## Available Scripts
+## Using node-repl
 
-In the project directory, you can run:
+- `yarn shadow-cljs node-repl`
+- `(require 'app.core-spec)`
+- `(cljs.test/run-tests 'app.core-spec)`
 
-### `yarn start`
+Pros:
+- needs only node-repl
+- can selectively run tests
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-The page will reload if you make edits.
+Cons:
+- namespace needs to be reloaded manually
+- node-repl isn't as nice as the Calva repl window (command repeat, autocomplete, etc)
+- no editor intellisense
+- can't use Calva repl because there's no application connected to the repl
 
-The app uses [Reagent](https://reagent-project.github.io), a minimalistic interface between ClojureScript and React.<br>
-You can use existing npm React components directly via a [interop call](http://reagent-project.github.io/docs/master/InteropWithReact.html#creating-reagent-components-from-react-components).
 
-Builds use [Shadow CLJS](https://github.com/thheller/shadow-cljs) for maximum compatibility with NPM libraries. You'll need a [Java SDK](https://adoptopenjdk.net/) (Version 8+, Hotspot) to use it. <br>
-You can [import npm libraries](https://shadow-cljs.github.io/docs/UsersGuide.html#js-deps) using Shadow CLJS. See the [user manual](https://shadow-cljs.github.io/docs/UsersGuide.html) for more information.
+## Using a node-test build with autorun
 
-### `yarn test` and `yarn e2e`
+- `yarn shadow-cljs watch test`
 
-`yarn test` launches the test runner in the interactive watch mode.<br>
-You can use `yarn test:once` to run the tests a single time, and `yarn e2e` to run end-to-end tests.
+Pros:
+- needs only shadow-cljs
+- all tests run on save
 
-See the ClojureScript [testing page](https://clojurescript.org/tools/testing) for more information. E2E tests use [Taiko](https://github.com/getgauge/taiko) to interact with a headless browser.
+Cons:
+- can't selectively run tests
+- no editor intellisense
+- can't use Calva repl because there's no application connected to the repl
 
-### `yarn lint` and `yarn format`
 
-`yarn lint` checks the code for known bad code patterns using [clj-kondo](https://github.com/borkdude/clj-kondo).
+## Using jack in on a node-test build with autorun
 
-`yarn format` will format your code in a consistent manner using [zprint-clj](https://github.com/clj-commons/zprint-clj).
+- ctrl+shift+p jack in
+- select `test` build
+- select `test` as build to connect to
 
-### `yarn build`
+Pros:
+- editor intellisense
+- all tests run on save
 
-Builds the app for production to the `public` folder.<br>
-It correctly bundles all code and optimizes the build for the best performance.
+Cons:
+- can't selectively run tests
+- can't use Calva repl because there's no application connected to the repl
+- ctrl+shift+p `Calva: run all tests` doesn't work (probably https://github.com/BetterThanTomorrow/calva/issues/311)
+```
+Evaluating file: core_spec.cljs
+No application has connected to the REPL server. Make sure your JS environment has loaded your compiled ClojureScript code.
 
-Your app is ready to be deployed!
+No results from file evaluation.
+Running namespace tests…
 
-## Useful resources
+No tests found. 😱, ns: 0, vars: 0
+```
 
-Clojurians Slack http://clojurians.net/.
+## Using jack in on a node-test build with autorun, but connecting to node-repl
 
-CLJS FAQ (for JavaScript developers) https://clojurescript.org/guides/faq-js.
+- ctrl+shift+p jack in
+- select `test` build
+- select `node-repl` as build to connect to
 
-Official CLJS API https://cljs.github.io/api/.
+Pros:
+- editor intellisense
+- all tests run on save
+- can use Calva repl
+- can selectively run tests on Calva repl
 
-Quick reference https://cljs.info/cheatsheet/.
+Cons:
+- ctrl+shift+p `Calva: run all tests` doesn't work (same as above)
+- must manually refresh namespace with ctrl+shift+p "Calva: load current namespace in repl" (or turn on "run load-file on save" option)
+- running tests by name in Calva repl shows nil return, must check separate calva output pane (probably https://github.com/thheller/shadow-cljs/issues/373)
+```
+(Calva repl)
+app.core-spec=> (my-test)
+nil
+```
+```
+(Calva output pane)
+<cljs-repl#5>
+FAIL in (my-test) (at d:475:6)
+This test should fail
+<cljs-repl#5>expected: (= 1 4)
+  actual: (not (= 1 4))
+```
 
-Offline searchable docs https://devdocs.io/.
+## Using jack in on a node-test build without autorun, but connecting to node-repl
 
-VSCode plugin https://github.com/BetterThanTomorrow/calva.
+Same as above, but removing the autorun is better when tests are slow.
 
+Run individual tests in calva repl by name `(my-test)`.
+Run all tests via `(cljs.test/run-tests 'app.core-spec)`.
+
+Cons:
+- trying to load the namespace on calva repl shows error on output pane (https://github.com/thheller/shadow-cljs/issues/587)
+```
+Evaluating file: core_spec.cljs
+symbol app.core-spec already provided by [:shadow.cljs.repl/resource "app/core_spec.cljs"], conflict with [:shadow.build.classpath/resource "app\\core_spec.cljs"]
+{:provide app.core-spec, :conflict [:shadow.cljs.repl/resource "app/core_spec.cljs"], :resource-id [:shadow.build.classpath/resource "app\\core_spec.cljs"]}
+ExceptionInfo: symbol app.core-spec already provided by [:shadow.cljs.repl/resource "app/core_spec.cljs"], conflict with [:shadow.build.classpath/resource "app\\core_spec.cljs"]
+	shadow.build.data/add-provide (data.clj:91)
+	shadow.build.data/add-provide (data.clj:86)
+```
